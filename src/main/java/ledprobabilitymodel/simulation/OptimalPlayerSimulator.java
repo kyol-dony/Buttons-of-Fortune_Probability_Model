@@ -85,6 +85,10 @@ public class OptimalPlayerSimulator {
     public SimulationResult simulate(int trials) {
         Map<Integer, Long> totalsByK = new HashMap<>();
         Map<Integer, Integer> countsByK = new HashMap<>();
+        for (int k = 1; k <= OptimalPolicy.K_MAX; k++) {
+            totalsByK.put(k, 0L);
+            countsByK.put(k, 0);
+        }
 
         long totalNet = 0;
 
@@ -97,11 +101,11 @@ public class OptimalPlayerSimulator {
         }
 
         Map<Integer, Double> avgByK = new HashMap<>();
-        for (Map.Entry<Integer, Long> e : totalsByK.entrySet()) {
-            int k = e.getKey();
-            long tot = e.getValue();
-            int count = countsByK.getOrDefault(k, 1);
-            avgByK.put(k, (double) tot / count);
+        for (int k = 1; k <= OptimalPolicy.K_MAX; k++) {
+            long tot = totalsByK.getOrDefault(k, 0L);
+            int count = countsByK.getOrDefault(k, 0);
+            double avg = (count == 0) ? 0.0 : (double) tot / count;
+            avgByK.put(k, avg);
         }
 
         double overallAvg = (double) totalNet / trials;
@@ -112,4 +116,3 @@ public class OptimalPlayerSimulator {
 
     public record SimulationResult(double overallAverageNet, Map<Integer, Double> averageNetByK) {}
 }
-
