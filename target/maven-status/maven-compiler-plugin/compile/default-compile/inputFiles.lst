@@ -1,0 +1,7 @@
+/Users/Kyle/VSC/ledprobdistribution/src/main/java/ledprobabilitymodel/Main.java
+/Users/Kyle/VSC/ledprobdistribution/src/main/java/ledprobabilitymodel/game/Payout.java
+/Users/Kyle/VSC/ledprobdistribution/src/main/java/ledprobabilitymodel/math/Combinatorics.java
+/Users/Kyle/VSC/ledprobdistribution/src/main/java/ledprobabilitymodel/math/Hypergeometric.java
+/Users/Kyle/VSC/ledprobdistribution/src/main/java/ledprobabilitymodel/simulation/ExactCalculator.java
+/Users/Kyle/VSC/ledprobdistribution/src/main/java/ledprobabilitymodel/simulation/MonteCarlo.java
+/Users/Kyle/VSC/ledprobdistribution/src/main/java/ledprobabilitymodel/simulation/Plotter.java
