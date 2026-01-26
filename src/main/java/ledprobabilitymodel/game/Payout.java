@@ -1,5 +1,6 @@
 package ledprobabilitymodel.game;
 
+// Provides payout and net calculation based on number of good LEDs claimed
 public class Payout {
     public static int payout(int good){ // corresponding payout for # good LEDs claimed
         switch (good){
