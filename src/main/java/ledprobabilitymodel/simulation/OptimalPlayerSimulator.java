@@ -9,7 +9,7 @@ import ledprobabilitymodel.game.Payout;
 
 /**
  * Runs Monte Carlo simulations where the player follows the precomputed
- * optimal policy (revealing or claiming) to estimate the true average net.
+ * optimal policy (revealing or claiming) to estimate the true average net. 
  */
 public class OptimalPlayerSimulator {
 

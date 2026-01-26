@@ -6,6 +6,7 @@ import org.knowm.xchart.SwingWrapper;
 
 import java.util.*;
 
+// Provides plotting functions for visualizing distributions
 public class Plotter {
     public static void plotDistribution (String title, Map<Integer, Double> dist){
 

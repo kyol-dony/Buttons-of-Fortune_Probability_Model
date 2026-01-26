@@ -5,7 +5,7 @@ import ledprobabilitymodel.game.Action;
 /*
  * The OptimalPolicy class computes the best possible strategy for the player
  * by solving the game as a Markov Decision Process
- * and storing the optimal action and claim size at every possible game state.
+ * and storing the optimal action and claim size at every possible game state. 
  */
 public class OptimalPolicy {
 
@@ -95,7 +95,7 @@ public class OptimalPolicy {
     public int kAt (int t, int g) {
         return bestK[t][g];
     }
-    
+
     // Print the optimal policy table
     public void printPolicy() {
         System.out.println("Optimal Policy Table (t,g): Action (k if CLAIM)");

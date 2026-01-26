@@ -1,5 +1,6 @@
 package ledprobabilitymodel.math;
 
+// Provides combinatorial functions
 public class Combinatorics {
     public static double nCk(int n, int k){ // builds Combination for (n k)
         if (k < 0 || k > n)

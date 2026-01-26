@@ -1,5 +1,6 @@
 package ledprobabilitymodel.math;
 
+// Provides hypergeometric distribution functions
 public class Hypergeometric {
     public static double pmf(int g, int N, int K, int k) { // hypergeometric probability mass function
         return Combinatorics.nCk(K, g)

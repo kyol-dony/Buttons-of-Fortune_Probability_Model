@@ -5,6 +5,7 @@ import ledprobabilitymodel.math.Hypergeometric;
 
 import java.util.*;
 
+// Provides exact calculations for net payout distributions and expected values with pure random claiming strategy
 public class ExactCalculator {
 
     // Maximum number of LEDs the player is allowed to claim

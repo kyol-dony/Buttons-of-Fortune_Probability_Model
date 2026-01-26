@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 
+// Provides Monte Carlo simulations for net payout distributions and expected values with pure random claiming strategy
 public class MonteCarlo {
 
     private static final Random rng = new Random();

@@ -2,6 +2,7 @@ package ledprobabilitymodel.simulation;
 
 import java.util.Map;
 
+// Analyze when the player is "in favor" of continuing to play - utilized for OptimalPolicy MDP
 public class FavorAnalysis {
 
     /**
