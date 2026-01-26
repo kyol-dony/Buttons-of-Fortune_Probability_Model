@@ -63,6 +63,11 @@ public class Main {
             System.out.printf("k=%d -> avg net = %.6f%n", e.getKey(), e.getValue());
         }
 
+        // Visualize expected/average net by k
+        Plotter.plotExpectedNetByK("Optimal policy average net by k", "Optimal policy", sorted);
+        Plotter.plotExpectedNetByK("Exact expected net by k", "Exact EV", exactEV);
+        Plotter.plotExpectedNetByK("Monte Carlo expected net by k", "MC EV", mcEV);
+
         System.out.println("\nBest k under k ≤ 5 constraint:");
         System.out.printf("k = %d, ExactEV = %.6f%n", bestK, bestExact);
         Plotter.plotDistribution ("Probability of Payouts for 4 Claimed", dist);

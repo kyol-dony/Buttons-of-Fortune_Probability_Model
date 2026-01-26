@@ -31,6 +31,25 @@ public class Plotter {
         new SwingWrapper<>(chart).displayChart();
     }
     
+    // Plot an expected/average net value for each k
+    public static void plotExpectedNetByK(String title, String seriesName, Map<Integer, Double> evByK) {
+         List<Integer> x = new ArrayList<>(evByK.keySet());
+         Collections.sort(x);
+
+         List<Double> y = new ArrayList<>();
+         for (int k : x) y.add(evByK.get(k));
+
+         CategoryChart chart = new CategoryChartBuilder()
+             .width(900).height(500)
+             .title(title)
+             .xAxisTitle("k (claims)")
+             .yAxisTitle("Expected / Average Net")
+             .build();
+
+         chart.addSeries(seriesName, x, y);
+         new SwingWrapper<>(chart).displayChart();
+    }
+    
     // Plot for MonteCarlo results
     public static void netNumDistribution (String title, Map<Integer, Integer> dist){
 
