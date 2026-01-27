@@ -53,7 +53,8 @@ public class OptimalPlayerSimulator {
             if (action == Action.CLAIM) {
                 int k = policy.kAt(revealed, goodFound);
                 if (k <= 0) {
-                    return new TrialResult(0, -goodFound);
+                    int penalty = (goodFound >= OptimalPolicy.K0) ? OptimalPolicy.REVEAL_PENALTY : 0;
+                    return new TrialResult(0, -penalty);
                 }
 
                 int goodClaimed = 0;
@@ -64,13 +65,15 @@ public class OptimalPlayerSimulator {
                     if (leds[revealed + i]) goodClaimed++;
                 }
 
-                int net = Payout.net(goodClaimed, actualK) - goodFound;
+                int penalty = (goodFound >= OptimalPolicy.K0) ? OptimalPolicy.REVEAL_PENALTY : 0;
+                int net = Payout.net(goodClaimed, actualK) - penalty;
                 return new TrialResult(actualK, net);
             }
 
             // Reveal one LED
             if (revealed >= leds.length) {
-                return new TrialResult(0, -goodFound);
+                int penalty = (goodFound >= OptimalPolicy.K0) ? OptimalPolicy.REVEAL_PENALTY : 0;
+                return new TrialResult(0, -penalty);
             }
 
             boolean isGood = leds[revealed];

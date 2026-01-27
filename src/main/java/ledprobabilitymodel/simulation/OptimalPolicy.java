@@ -12,6 +12,7 @@ public class OptimalPolicy {
     // Problem parameters
     public static final int N0 = 30;
     public static final int K0 = 3;
+    public static final int REVEAL_PENALTY = 1; // flat penalty only if all good LEDs were revealed
     
     // Maximum allowable k value
     public static final int K_MAX = 5;
@@ -34,9 +35,10 @@ public class OptimalPolicy {
 
                 // Terminal states:
                 // - all good found or no LEDs left => cannot claim.
-                //   Net is the penalty for revealed goods (cannot be claimed).
-                if (g == K0 || t == N0) {
-                    V[t][g] = -g;
+                //   Net is the flat penalty only when all goods have been revealed.
+                boolean allGoodsRevealed = (g == K0);
+                if (allGoodsRevealed || t == N0) {
+                    V[t][g] = allGoodsRevealed ? -REVEAL_PENALTY : 0.0;
                     bestAction[t][g] = Action.CLAIM;
                     bestK[t][g] = 0;
                     continue;
@@ -52,8 +54,8 @@ public class OptimalPolicy {
                 int argBestK = 1;
 
                 for (int k = 1; k <= upperK; k++) {
-                    // Exact expected net if we claim k from (N,K), minus penalty for revealed goods
-                    double ev = ExactCalculator.expectedNet(N, K, k) - g;
+                    // Exact expected net if we claim k from (N,K), minus flat penalty if all goods were revealed
+                    double ev = ExactCalculator.expectedNet(N, K, k) - (allGoodsRevealed ? REVEAL_PENALTY : 0.0);
                     if (ev > bestClaimEV) {
                         bestClaimEV = ev;
                         argBestK = k;
