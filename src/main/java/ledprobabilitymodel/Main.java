@@ -20,7 +20,7 @@ public class Main {
         var dist = ExactCalculator.netDistribution(N, K, 4); // Edit k here for different distributions 
         Map<Integer, Double> exactEV = ExactCalculator.expectedNetByK(N, K);
         Map<Integer, Double> mcEV = MonteCarlo.expectedNetByKMC(trials, N, K);
-        Map<Integer, Integer> mcNet = MonteCarlo.simulatedNetByKMC(trials, N, K);
+        Map<Integer, Integer> mcNet = MonteCarlo.simulatedNetTotalByKMC(trials, N, K);
         Map<Integer, Integer> mcNumNet1 = MonteCarlo.numNetOccured(N, K, 1, trials);
         Map<Integer, Integer> mcNumNet2 = MonteCarlo.numNetOccured(N, K, 2, trials);
         Map<Integer, Integer> mcNumNet3 = MonteCarlo.numNetOccured(N, K, 3, trials);
@@ -62,16 +62,21 @@ public class Main {
         for (var e : sorted.entrySet()) {
             System.out.printf("k=%d -> avg net = %.6f%n", e.getKey(), e.getValue());
         }
+        var optimalNetCounts = new TreeMap<>(optimalSim.netOccurrences(trials));
+        System.out.println("Net payout occurrence counts under optimal policy:");
+        for (var e : optimalNetCounts.entrySet()) {
+            System.out.printf("net=%d -> count=%d%n", e.getKey(), e.getValue());
+        }
 
         // Visualize expected/average net by k
         Plotter.plotExpectedNetByK("Optimal policy average net by k", "Optimal policy", sorted);
-        Plotter.plotExpectedNetByK("Exact expected net by k", "Exact EV", exactEV);
+        Plotter.plotExpectedNetByK("Exact expected net by k (non-optimal)", "Exact EV", exactEV);
         Plotter.plotExpectedNetByK("Monte Carlo expected net by k", "MC EV", mcEV);
 
         System.out.println("\nBest k under k ≤ 5 constraint:");
         System.out.printf("k = %d, ExactEV = %.6f%n", bestK, bestExact);
-        Plotter.plotDistribution ("Probability of Payouts for 4 Claimed", dist);
-        Plotter.netNumDistribution ("Number of Occurrences of Payouts for k=5 (N=30, K=3, k=5)", mcNumNet5);
+        // Plotter.plotDistribution ("Probability of Payouts for 4 Claimed", dist);
+        // Plotter.netNumDistribution ("Number of Occurrences of Payouts for k=5 (N=30, K=3, k=5)", mcNumNet5);
         
     }
 }

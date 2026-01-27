@@ -33,10 +33,10 @@ public class OptimalPolicy {
             for (int g = K0; g >= 0; g--) {
 
                 // Terminal states:
-                // - all good found => auto-end with net 0 (per the rules)
-                // - no LEDs left to reveal/claim => net 0
+                // - all good found or no LEDs left => cannot claim.
+                //   Net is the penalty for revealed goods (cannot be claimed).
                 if (g == K0 || t == N0) {
-                    V[t][g] = 0.0;
+                    V[t][g] = -g;
                     bestAction[t][g] = Action.CLAIM;
                     bestK[t][g] = 0;
                     continue;
@@ -52,8 +52,8 @@ public class OptimalPolicy {
                 int argBestK = 1;
 
                 for (int k = 1; k <= upperK; k++) {
-                    // Exact expected net if we claim k from (N,K)
-                    double ev = ExactCalculator.expectedNet(N, K, k);
+                    // Exact expected net if we claim k from (N,K), minus penalty for revealed goods
+                    double ev = ExactCalculator.expectedNet(N, K, k) - g;
                     if (ev > bestClaimEV) {
                         bestClaimEV = ev;
                         argBestK = k;

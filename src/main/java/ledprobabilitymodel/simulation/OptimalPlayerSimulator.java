@@ -53,7 +53,7 @@ public class OptimalPlayerSimulator {
             if (action == Action.CLAIM) {
                 int k = policy.kAt(revealed, goodFound);
                 if (k <= 0) {
-                    return new TrialResult(0, 0);
+                    return new TrialResult(0, -goodFound);
                 }
 
                 int goodClaimed = 0;
@@ -64,12 +64,13 @@ public class OptimalPlayerSimulator {
                     if (leds[revealed + i]) goodClaimed++;
                 }
 
-                return new TrialResult(actualK, Payout.net(goodClaimed, actualK));
+                int net = Payout.net(goodClaimed, actualK) - goodFound;
+                return new TrialResult(actualK, net);
             }
 
             // Reveal one LED
             if (revealed >= leds.length) {
-                return new TrialResult(0, 0);
+                return new TrialResult(0, -goodFound);
             }
 
             boolean isGood = leds[revealed];
@@ -110,6 +111,18 @@ public class OptimalPlayerSimulator {
 
         double overallAvg = (double) totalNet / trials;
         return new SimulationResult(overallAvg, avgByK);
+    }
+
+    /**
+     * Count how many times each net payout occurs while following the optimal policy.
+     */
+    public Map<Integer, Integer> netOccurrences(int trials) {
+        Map<Integer, Integer> counts = new HashMap<>();
+        for (int t = 0; t < trials; t++) {
+            TrialResult r = playOne();
+            counts.merge(r.net(), 1, Integer::sum);
+        }
+        return counts;
     }
 
     public record TrialResult(int claimedK, int net) {}

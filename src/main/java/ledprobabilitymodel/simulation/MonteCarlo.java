@@ -91,7 +91,7 @@ public class MonteCarlo {
     /**
      * Simulated total net for all allowed k values (1..K_MAX).
      */
-    public static Map<Integer, Integer> simulatedNetByKMC(int trials, int N, int K) { 
+    public static Map<Integer, Integer> simulatedNetTotalByKMC(int trials, int N, int K) { 
         Map<Integer, Integer> netMap = new LinkedHashMap<>();
         int upper = Math.min(K_MAX, N);
 
