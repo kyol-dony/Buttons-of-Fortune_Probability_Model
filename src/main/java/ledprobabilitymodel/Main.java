@@ -7,6 +7,7 @@ import ledprobabilitymodel.simulation.ExactCalculator;
 import ledprobabilitymodel.simulation.MonteCarlo;
 import ledprobabilitymodel.simulation.OptimalPlayerSimulator;
 import ledprobabilitymodel.simulation.OptimalPolicy;
+import ledprobabilitymodel.simulation.OutcomeDistribution;
 import ledprobabilitymodel.simulation.Plotter;
 
 public class Main {
@@ -27,28 +28,28 @@ public class Main {
         Map<Integer, Integer> mcNumNet4 = MonteCarlo.numNetOccured(N, K, 4, trials);
         Map<Integer, Integer> mcNumNet5 = MonteCarlo.numNetOccured(N, K, 5, trials);
 
-        System.out.println("k\tExactEV\t\tMonteCarloEV");
-        System.out.println("----------------------------------------");
+        // System.out.println("k\tExactEV\t\tMonteCarloEV");
+        // System.out.println("----------------------------------------");
 
-        int bestK = 1;
-        double bestExact = Double.NEGATIVE_INFINITY;
+        // int bestK = 1;
+        // double bestExact = Double.NEGATIVE_INFINITY;
 
-        for (int k : exactEV.keySet()) {
-            double e = exactEV.get(k);
-            double m = mcEV.get(k);
+        // for (int k : exactEV.keySet()) {
+        //     double e = exactEV.get(k);
+        //     double m = mcEV.get(k);
 
-            System.out.printf("%d\t% .6f\t% .6f%n", k, e, m);
+        //     System.out.printf("%d\t% .6f\t% .6f%n", k, e, m);
 
-            if (e > bestExact) {
-                bestExact = e;
-                bestK = k;
-            }
-        }
+        //     if (e > bestExact) {
+        //         bestExact = e;
+        //         bestK = k;
+        //     }
+        // }
 
-        for (int k : mcNet.keySet()) {
-            int net = mcNet.get(k);
-            System.out.printf("Simulated Total Net for k=%d: %d%n", k, net);
-        }
+        // for (int k : mcNet.keySet()) {
+        //     int net = mcNet.get(k);
+        //     System.out.printf("Simulated Total Net for k=%d: %d%n", k, net);
+        // }
 
         // Optimal simulation data
         OptimalPolicy policy = new OptimalPolicy();
@@ -70,15 +71,19 @@ public class Main {
 
         // Visualize expected/average net by k
         Plotter.plotExpectedNetByK("Optimal policy average net by k", "Optimal policy", sorted);
-        Plotter.plotExpectedNetByK("Exact expected net by k (non-optimal)", "Exact EV", exactEV);
-        Plotter.plotExpectedNetByK("Monte Carlo expected net by k", "MC EV", mcEV);
+        // Plotter.plotExpectedNetByK("Exact expected net by k (non-optimal)", "Exact EV", exactEV);
+        // Plotter.plotExpectedNetByK("Monte Carlo expected net by k", "MC EV", mcEV);
 
-        System.out.println("\nBest k under k ≤ 5 constraint:");
-        System.out.printf("k = %d, ExactEV = %.6f%n", bestK, bestExact);
+        // System.out.println("\nBest k under k ≤ 5 constraint:");
+        // System.out.printf("k = %d, ExactEV = %.6f%n", bestK, bestExact);
         // Plotter.plotDistribution ("Probability of Payouts for 4 Claimed", dist);
         // Plotter.netNumDistribution ("Number of Occurrences of Payouts for k=5 (N=30, K=3, k=5)", mcNumNet5);
         
+        Map<Integer, Double> netProb = OutcomeDistribution.optimalNetDistribution(policy);
+        Plotter.plotDistribution("Optimal Policy Net Payout Distribution (N=30, K=3)", netProb);
+
     }
 }
+
 
 // mvn -q exec:java -Dexec.mainClass=ledprobabilitymodel.Main to run the code `
