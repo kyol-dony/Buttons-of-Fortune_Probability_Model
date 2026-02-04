@@ -33,6 +33,15 @@ This runs the simulations/DP, prints summary stats, and opens Swing charts.
 - `simulation/Plotter`: XChart-based bar charts for distributions and EV-by-k.
 - `ledprobabilitymodel/Main`: Wires everything together for a full run/demo.
 
+## Variables (game terms)
+- `N`: total LEDs on the board.
+- `K`: number of good LEDs on the board (total goods).
+- `k`: number of LEDs a player claims in a single claim action.
+- `g`: number of good LEDs already revealed (can’t be claimed anymore).
+- `N0`, `K0`: starting values of `N` and `K` used by the optimal policy/DP.
+- `K_MAX`: maximum allowed claim size (cap on k).
+- `REVEAL_PENALTY`: flat token penalty applied only if all good LEDs have been revealed before claiming.
+
 ## Adjusting Parameters
 In `Main.java`, you can tweak:
 - `N`, `K`, and `trials` for problem size and Monte Carlo iterations.
