@@ -1,4 +1,4 @@
-# LED Probability Model
+# Buttons of Fortune Probability Model
 
 This project explores the “Buttons of Fortune” style LED guessing game. It provides:
 - Exact combinatorial probability calculations (hypergeometric).
