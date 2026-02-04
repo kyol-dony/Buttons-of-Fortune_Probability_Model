@@ -64,7 +64,7 @@ public class Main {
             System.out.printf("k=%d -> avg net = %.6f%n", e.getKey(), e.getValue());
         }
         var optimalNetCounts = new TreeMap<>(optimalSim.netOccurrences(trials));
-        System.out.println("Net payout occurrence counts under optimal policy:");
+        System.out.println("\nNet payout occurrence counts under optimal policy:");
         for (var e : optimalNetCounts.entrySet()) {
             System.out.printf("net=%d -> count=%d%n", e.getKey(), e.getValue());
         }
@@ -80,6 +80,13 @@ public class Main {
         // Plotter.netNumDistribution ("Number of Occurrences of Payouts for k=5 (N=30, K=3, k=5)", mcNumNet5);
         
         Map<Integer, Double> netProb = OutcomeDistribution.optimalNetDistribution(policy);
+
+        System.out.println("\nFull outcome distribution under optimal policy (net -> probability):");
+        var sortedOutcomes = new TreeMap<>(netProb);
+        for (var e : sortedOutcomes.entrySet()) {
+            System.out.printf("net=%d -> %.10f%n", e.getKey(), e.getValue());
+        }
+
         Plotter.plotDistribution("Optimal Policy Net Payout Distribution (N=30, K=3)", netProb);
 
     }
