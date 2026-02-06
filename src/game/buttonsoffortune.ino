@@ -1,4 +1,5 @@
-#include "Adafruit_NeoTrellisM4.h"
+#include <Adafruit_NeoTrellisM4.h>
+#include <Arduino.h>
 
 Adafruit_NeoTrellisM4 trellis = Adafruit_NeoTrellisM4();
 
