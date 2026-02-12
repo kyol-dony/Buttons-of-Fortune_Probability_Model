@@ -33,6 +33,14 @@ This runs the simulations/DP, prints summary stats, and opens Swing charts.
 - `simulation/Plotter`: XChart-based bar charts for distributions and EV-by-k.
 - `ledprobabilitymodel/Main`: Wires everything together for a full run/demo.
 
+## Arduino / Trellis M4 firmware
+- Firmware lives in `src/game/buttonsoffortune.ino` and builds with PlatformIO (VS Code extension or CLI).
+- Board: `adafruit_trellis_m4`, Framework: Arduino, Libraries: `Adafruit NeoTrellis M4 Library` and `Adafruit NeoPixel` (declared in `platformio.ini` and auto-installed).
+- Build from repo root: `pio run -e trellis_m4`
+- Flash (USB connected): `pio run -e trellis_m4 -t upload`
+- Optional serial monitor: `pio device monitor -e trellis_m4 -b 115200`
+- If IntelliSense is stale, run “PlatformIO: Rebuild IntelliSense Index”.
+
 ## Variables (game terms)
 - `N`: total LEDs on the board.
 - `K`: number of good LEDs on the board (total goods).
