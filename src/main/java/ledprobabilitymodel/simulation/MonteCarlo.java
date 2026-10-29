@@ -1,109 +1,62 @@
 package ledprobabilitymodel.simulation;
 
-import ledprobabilitymodel.game.Payout;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Random;
+import java.util.TreeMap;
 
-// Provides Monte Carlo simulations for net payout distributions and expected values with pure random claiming strategy
-public class MonteCarlo {
+/** Original fixed-claim entry points, now reproducible with seed 2026. */
+public final class MonteCarlo {
+  public static final int K_MAX = ExactCalculator.K_MAX;
+  private static final long LEGACY_SEED = 2026;
 
-    private static final Random rng = new Random();
+  private MonteCarlo() {}
 
-    public static final int K_MAX = 5;
+  public static Map<Integer, Integer> numNetOccured(
+      int total, int good, int claimSize, int trials) {
+    var stats =
+        Simulator.fixed(ExactCalculator.originalRules(total, good), claimSize, trials, LEGACY_SEED);
+    Map<Integer, Integer> counts = new TreeMap<>();
+    stats.outcomes().forEach((net, count) -> counts.put(net, Math.toIntExact(count)));
+    return counts;
+  }
 
-    // Single trial net payout simulation
-    private static int oneTrialNet(int N, int K, int k) {
-        boolean[] leds = new boolean[N];
+  /**
+   * @deprecated Use simulatedTotalNet; spelling retained for source compatibility.
+   */
+  @Deprecated
+  public static double simualtedTotalNet(int trials, int total, int good, int claimSize) {
+    return simulatedTotalNet(trials, total, good, claimSize);
+  }
 
-        for (int i = 0; i < K; i++) leds[i] = true;
+  public static long simulatedTotalNet(int trials, int total, int good, int claimSize) {
+    var stats =
+        Simulator.fixed(ExactCalculator.originalRules(total, good), claimSize, trials, LEGACY_SEED);
+    return stats.outcomes().entrySet().stream()
+        .mapToLong(e -> (long) e.getKey() * e.getValue())
+        .sum();
+  }
 
-        for (int i = N - 1; i > 0; i--) {
-            int j = rng.nextInt(i + 1);
-            boolean tmp = leds[i];
-            leds[i] = leds[j];
-            leds[j] = tmp;
-        }
-        int good = 0;
-        for (int i = 0; i < k; i++) {
-            if (leds[i]) good++;
-        }
-        return Payout.net(good, k);
+  public static double expectedNetMC(int trials, int total, int good, int claimSize) {
+    return Simulator.fixed(
+            ExactCalculator.originalRules(total, good), claimSize, trials, LEGACY_SEED)
+        .mean();
+  }
+
+  public static Map<Integer, Double> expectedNetByKMC(int trials, int total, int good) {
+    var config = ExactCalculator.originalRules(total, good);
+    Map<Integer, Double> values = new LinkedHashMap<>();
+    for (int size = 1; size <= config.maxClaim(); size++) {
+      values.put(size, Simulator.fixed(config, size, trials, LEGACY_SEED).mean());
     }
+    return values;
+  }
 
-    // Number of times each net payout occurred in trials
-    public static Map<Integer, Integer> numNetOccured(int N, int K, int k, int trials) {
-        int net = 0;
-        Map<Integer, Integer> netCount = new LinkedHashMap<>();
-        for (int i = 0; i < trials; i++) {
-            net = oneTrialNet(N, K, k);
-            if (net < 0) {
-                netCount.put(net, netCount.getOrDefault(net, 0) + 1);
-            } else {
-                netCount.put(net, netCount.getOrDefault(net, 0) + 1);
-            }
-        }
-        return netCount;
+  public static Map<Integer, Integer> simulatedNetTotalByKMC(int trials, int total, int good) {
+    Map<Integer, Integer> totals = new LinkedHashMap<>();
+    var config = ExactCalculator.originalRules(total, good);
+    for (int size = 1; size <= config.maxClaim(); size++) {
+      totals.put(size, Math.toIntExact(simulatedTotalNet(trials, total, good, size)));
     }
-    
-
-    /**
-     * Simulated total net for a specific k value.
-     */
-    public static double simualtedTotalNet(int trials, int N, int K, int k) {
-        long total = 0;
-        for (int t = 0; t < trials; t++) {
-            total += oneTrialNet(N, K, k);
-        }
-        return total;
-    }
-
-    /**
-     * Monte Carlo EV for a specific k value.
-     */
-    public static double expectedNetMC(int trials, int N, int K, int k) { 
-        if (k < 1 || k > K_MAX || k > N) {
-            throw new IllegalArgumentException(
-                    "k must satisfy 1 <= k <= min(" + K_MAX + ", N)"
-            );
-        }
-        long total = 0;
-        for (int t = 0; t < trials; t++) {
-            total += oneTrialNet(N, K, k);
-        }
-        return (double) total / trials;
-    }
-
-    /**
-     * Monte Carlo EV for all allowed k values (1..K_MAX).
-     */
-    public static Map<Integer, Double> expectedNetByKMC(int trials, int N, int K) {
-        Map<Integer, Double> evs = new LinkedHashMap<>();
-
-        int upper = Math.min(K_MAX, N);
-        for (int k = 1; k <= upper; k++) {
-            evs.put(k, expectedNetMC(trials, N, K, k));
-        }
-        return evs;
-    }
-
-    /**
-     * Simulated total net for all allowed k values (1..K_MAX).
-     */
-    public static Map<Integer, Integer> simulatedNetTotalByKMC(int trials, int N, int K) { 
-        Map<Integer, Integer> netMap = new LinkedHashMap<>();
-        int upper = Math.min(K_MAX, N);
-
-        for (int k = 1; k <= upper; k++) {
-            int totalNet = 0;
-            for (int t = 0; t < trials; t++) {
-                totalNet += oneTrialNet(N, K, k);
-                
-            }
-            netMap.put(k, totalNet);
-        }
-        return netMap;
-    }
-    
+    return totals;
+  }
 }

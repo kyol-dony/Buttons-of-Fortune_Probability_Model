@@ -1,17 +1,15 @@
 package ledprobabilitymodel.game;
 
-// Provides payout and net calculation based on number of good LEDs claimed
-public class Payout {
-    public static int payout(int good){ // corresponding payout for # good LEDs claimed
-        switch (good){
-            case 1: return 5;
-            case 2: return 10;
-            case 3: return 30;
-            default: return 0;
-        }
-    }
+/** Original-game payout helpers retained for existing callers. */
+public final class Payout {
+  private Payout() {}
 
-    public static int net(int good, int k){
-        return payout(good) - k;
-    }
+  public static int payout(int good) {
+    if (good < 0 || good > 3) throw new IllegalArgumentException("good must be between 0 and 3");
+    return GameConfig.defaults().payouts().get(good);
+  }
+
+  public static int net(int good, int claimSize) {
+    return GameConfig.defaults().net(good, claimSize);
+  }
 }

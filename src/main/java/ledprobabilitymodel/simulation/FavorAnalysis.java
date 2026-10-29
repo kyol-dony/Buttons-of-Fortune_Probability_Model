@@ -1,107 +1,95 @@
 package ledprobabilitymodel.simulation;
 
+import java.util.List;
 import java.util.Map;
+import ledprobabilitymodel.game.GameConfig;
+import ledprobabilitymodel.game.GameState;
 
-// Analyze when the player is "in favor" of continuing to play - utilized for OptimalPolicy MDP
-public class FavorAnalysis {
+/** Keeps probability of profit separate from expected net payoff. */
+public final class FavorAnalysis {
+  private FavorAnalysis() {}
 
-    /**
-     * Calculate the probability of making a profit based on the net distribution.
-     *
-     * @param netDist map of net values to their probabilities
-     * @return probability of making a profit (net > 0)
-     */
-    public static double profitProbability(Map<Integer, Double> netDist) {
-        double p = 0.0;
-        for (var e : netDist.entrySet()) {
-            int net = e.getKey();
-            double prob = e.getValue();
-            if (net > 0) p += prob;
-        }
-        return p;
+  public record BestResult(int bestK, double probability) {}
+
+  public record ExpectedValueResult(int bestK, double expectedNet) {}
+
+  public static double profitProbability(Map<Integer, Double> distribution) {
+    return distribution.entrySet().stream()
+        .filter(entry -> entry.getKey() > 0)
+        .mapToDouble(Map.Entry::getValue)
+        .sum();
+  }
+
+  public static BestResult bestProfit(GameConfig config, GameState state) {
+    config.validateState(state);
+    if (config.terminal(state)) return new BestResult(0, config.terminalNet(state) > 0 ? 1 : 0);
+    int bestSize = 1;
+    double bestProbability = -1;
+    int remaining = config.totalTiles() - state.revealed();
+    for (int size = 1; size <= Math.min(config.maxClaim(), remaining); size++) {
+      double probability = profitProbability(ExactCalculator.netDistribution(config, state, size));
+      if (probability > bestProbability) {
+        bestProbability = probability;
+        bestSize = size;
+      }
     }
+    return new BestResult(bestSize, bestProbability);
+  }
 
-    public static record BestResult(int bestK, double probability) {}
-
-    /**
-     * Find the k (number of claims) that maximizes profit probability for a given setup.
-     *
-     * @param N total LEDs
-     * @param K good LEDs
-     */
-    public static BestResult bestProfit(int N, int K) {
-        int upper = Math.min(ExactCalculator.K_MAX, N);
-        int bestK = 1;
-        double best = Double.NEGATIVE_INFINITY;
-
-        for (int k = 1; k <= upper; k++) {
-            Map<Integer, Double> netDist = ExactCalculator.netDistribution(N, K, k);
-            double pProfit = profitProbability(netDist);
-            if (pProfit > best) {
-                best = pProfit;
-                bestK = k;
-            }
-        }
-        return new BestResult(bestK, best);
+  public static ExpectedValueResult bestExpectedNet(GameConfig config, GameState state) {
+    config.validateState(state);
+    if (config.terminal(state)) return new ExpectedValueResult(0, config.terminalNet(state));
+    int bestSize = 1;
+    double best = Double.NEGATIVE_INFINITY;
+    for (int size = 1;
+        size <= Math.min(config.maxClaim(), config.totalTiles() - state.revealed());
+        size++) {
+      double value = ExactCalculator.expectedNet(config, state, size);
+      if (value > best) {
+        best = value;
+        bestSize = size;
+      }
     }
+    return new ExpectedValueResult(bestSize, best);
+  }
 
-    /**
-     * Finds the earliest reveal-count t where the player can be "in favor"
-     * assuming the player has revealed t LEDs and found g Good among them.
-     *
-     * We scan all reachable (t,g) states and report those that meet:
-     *   - EV criterion: bestEV > 0
-     *   - Profit criterion: bestProfitProb > 0.5
-     *
-     * You can change thresholds as you like.
-     */
-    public static void findSwitchPoints() {
-        int N0 = OptimalPolicy.N0;
-        int K0 = OptimalPolicy.K0;
+  public static List<GameState> positiveExpectedValueStates(OptimalPolicy policy) {
+    return policy.reachableStates().stream()
+        .filter(state -> !policy.config().terminal(state))
+        .filter(state -> bestExpectedNet(policy.config(), state).expectedNet() > 0)
+        .toList();
+  }
 
-        System.out.println("---- EV > 0 switch states ----");
-        for (int t = 0; t <= N0; t++) {
-            for (int g = 0; g <= K0; g++) {
+  public static BestResult bestProfit(int total, int good) {
+    return bestProfit(ExactCalculator.originalRules(total, good), GameState.initial());
+  }
 
-                // Skip unreachable g (can't find more good than reveals)
-                if (g > t) continue;
-
-                int N = N0 - t;
-                int K = K0 - g;
-                if (K < 0) continue;
-
-                // terminal: if K==0 auto-end; skip or treat separately
-                if (K == 0 || N == 0) continue;
-
-                BestResult br = bestProfit(N, K);
-                if (br.probability() > 0.0) {
-                    System.out.printf("State (t=%d,g=%d): N=%d,K=%d bestK=%d EV=%.6f%n",
-                            t, g, N, K, br.bestK(), br.probability());
-                }
-            }
-        }
-
-        System.out.println("\n---- P(Net>0) > 0.5 switch states ----");
-        for (int t = 0; t <= N0; t++) {
-            for (int g = 0; g <= K0; g++) {
-
-                if (g > t) continue;
-
-                int N = N0 - t;
-                int K = K0 - g;
-                if (K < 0) continue;
-
-                if (K == 0 || N == 0) continue;
-
-                BestResult br = bestProfit(N, K);
-                if (br.probability() > 0.5) {
-                    System.out.printf("State (t=%d,g=%d): N=%d,K=%d bestK=%d P(profit)=%.6f%n",
-                            t, g, N, K, br.bestK(), br.probability());
-                }
-            }
-        }
-
+  public static void findSwitchPoints() {
+    var policy = new OptimalPolicy();
+    System.out.println("Immediate claim states with expected net > 0:");
+    for (var state : positiveExpectedValueStates(policy)) {
+      var result = bestExpectedNet(policy.config(), state);
+      System.out.printf(
+          java.util.Locale.ROOT,
+          "revealed=%d good_revealed=%d claim=%d EV=%.6f%n",
+          state.revealed(),
+          state.goodRevealed(),
+          result.bestK(),
+          result.expectedNet());
     }
-
-    
+    System.out.println("Immediate claim states with P(profit) > 0.5:");
+    for (var state : policy.reachableStates()) {
+      if (policy.config().terminal(state)) continue;
+      var result = bestProfit(policy.config(), state);
+      if (result.probability() > 0.5) {
+        System.out.printf(
+            java.util.Locale.ROOT,
+            "revealed=%d good_revealed=%d claim=%d P(profit)=%.6f%n",
+            state.revealed(),
+            state.goodRevealed(),
+            result.bestK(),
+            result.probability());
+      }
+    }
+  }
 }

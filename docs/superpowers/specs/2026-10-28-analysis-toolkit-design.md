@@ -1,6 +1,6 @@
 # Buttons of Fortune: Reproducible Analysis Toolkit
 Date: 2026-10-28
-Status: Proposed scope for user review
+Status: Approved by user for implementation
 Repository: kyol-dony/ledprobdistribution
 Baseline commit: 752f09622fe825230ba53dbc3657c00801270d21
 
@@ -89,3 +89,4 @@ A reviewed implementation branch and draft pull request with a concise before/af
 
 ## Implementation choices left to the builder
 Exact package names, CLI flag spellings, report filenames, test framework version, numeric implementation details, conservative resource limits, and formatting configuration, provided they satisfy this scope and avoid unnecessary dependencies.
+

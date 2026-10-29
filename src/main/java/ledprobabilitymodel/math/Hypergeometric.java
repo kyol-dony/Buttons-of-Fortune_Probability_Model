@@ -1,22 +1,30 @@
 package ledprobabilitymodel.math;
 
-// Provides hypergeometric distribution functions
-public class Hypergeometric {
-    public static double pmf(int g, int N, int K, int k) { // hypergeometric probability mass function
-        return Combinatorics.nCk(K, g)
-                * Combinatorics.nCk(N - K, k - g)
-                / Combinatorics.nCk(N, k);
-    }
-    public static int gMin(int N, int K, int k) { // ensures that smallest number for k isn't always 0
-        return Math.max(0, k - (N - K));
-    }
-    public static int gMax(int K, int k) {
-        return Math.min(K, k);
-    }
-}
+/** Probabilities for uniformly sampled tiles without replacement. */
+public final class Hypergeometric {
+  private Hypergeometric() {}
 
-// g = good LEDs inside claimed set
-// N = total num LEDs
-// K = num good LEDs in overall pool
-// N - K = num bad LEDs in overall pool
-// k = num LEDs the player claims
+  public static double pmf(int goodDrawn, int totalTiles, int goodTiles, int draws) {
+    if (totalTiles < 0
+        || totalTiles > 200
+        || goodTiles < 0
+        || goodTiles > totalTiles
+        || draws < 0
+        || draws > totalTiles) {
+      throw new IllegalArgumentException("invalid hypergeometric population or draw count");
+    }
+    if (goodDrawn < gMin(totalTiles, goodTiles, draws) || goodDrawn > gMax(goodTiles, draws))
+      return 0;
+    return Combinatorics.nCk(goodTiles, goodDrawn)
+        * Combinatorics.nCk(totalTiles - goodTiles, draws - goodDrawn)
+        / Combinatorics.nCk(totalTiles, draws);
+  }
+
+  public static int gMin(int totalTiles, int goodTiles, int draws) {
+    return Math.max(0, draws - (totalTiles - goodTiles));
+  }
+
+  public static int gMax(int goodTiles, int draws) {
+    return Math.min(goodTiles, draws);
+  }
+}
