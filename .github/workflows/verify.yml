@@ -1,0 +1,35 @@
+name: Verify analysis toolkit
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: ['17', '25']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - run: mvn --batch-mode verify
+      - name: Headless study and clean checkout
+        run: |
+          mvn -q exec:java -Dexec.args="--trials 1000 --output reports/ci"
+          test -z "$(git status --porcelain)"
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - run: sh scripts/format.sh --check
+      - run: git diff --check
+

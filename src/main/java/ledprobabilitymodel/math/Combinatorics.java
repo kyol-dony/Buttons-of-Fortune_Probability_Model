@@ -1,17 +1,18 @@
 package ledprobabilitymodel.math;
 
-// Provides combinatorial functions
-public class Combinatorics {
-    public static double nCk(int n, int k){ // builds Combination for (n k)
-        if (k < 0 || k > n)
-            return 0;
-        if ( k > n - k) k = n - k;
+/** Double-precision binomial coefficients for the toolkit's bounded board sizes. */
+public final class Combinatorics {
+  private Combinatorics() {}
 
-        double result = 1.0;
-        for (int i = 1; i <= k; i++) {
-            result *= (n - (k - i));
-            result /= i;
-        }
-        return result;
+  public static double nCk(int total, int chosen) {
+    if (total < 0 || total > 200)
+      throw new IllegalArgumentException("total must be between 0 and 200");
+    if (chosen < 0 || chosen > total) return 0;
+    int count = Math.min(chosen, total - chosen);
+    double result = 1;
+    for (int i = 1; i <= count; i++) {
+      result *= (double) (total - count + i) / i;
     }
+    return result;
+  }
 }

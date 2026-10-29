@@ -1,96 +1,45 @@
 package ledprobabilitymodel.simulation;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
-
+import java.util.TreeMap;
 import ledprobabilitymodel.game.Action;
 
-/**
- * Computes the exact probability distribution over final net outcomes
- * when following the optimal policy (including reveal penalties).
- *
- * The probability of a final payout is the weighted sum over all reveal
- * paths dictated by the policy, combined with the hypergeometric payout
- * distribution of the chosen claim.
- */
-public class OutcomeDistribution {
+/** Propagates initial probability mass through the solved policy's reachable states. */
+public final class OutcomeDistribution {
+  private OutcomeDistribution() {}
 
-    /**
-     * Probability distribution of net payouts starting from the initial state
-     * and following the optimal policy.
-     */
-    public static Map<Integer, Double> optimalNetDistribution(OptimalPolicy policy) {
-        return distFromState(0, 0, policy, new HashMap<>());
-    }
-
-    // Recursive, memoized distribution from state (t, g)
-    private static Map<Integer, Double> distFromState(
-            int t, int g, OptimalPolicy policy, Map<String, Map<Integer, Double>> memo) {
-
-        String key = t + ":" + g;
-        if (memo.containsKey(key)) return memo.get(key);
-
-        // Terminal: all goods revealed or no LEDs left to reveal/claim
-        boolean allGoodsRevealed = (g == OptimalPolicy.K0);
-        if (allGoodsRevealed || t == OptimalPolicy.N0) {
-            int penalty = allGoodsRevealed ? OptimalPolicy.REVEAL_PENALTY : 0;
-            Map<Integer, Double> terminal = Map.of(-penalty, 1.0);
-            memo.put(key, terminal);
-            return terminal;
+  public static Map<Integer, Double> optimalNetDistribution(OptimalPolicy policy) {
+    var config = policy.config();
+    double[][] mass = new double[config.totalTiles() + 1][config.goodTiles() + 1];
+    mass[0][0] = 1;
+    Map<Integer, Double> outcomes = new TreeMap<>();
+    for (var state : policy.reachableStates()) {
+      double probability = mass[state.revealed()][state.goodRevealed()];
+      if (probability == 0) continue;
+      if (config.terminal(state)) {
+        outcomes.merge(config.terminalNet(state), probability, Double::sum);
+        continue;
+      }
+      var decision = policy.decisionAt(state);
+      if (decision.action() == Action.CLAIM) {
+        for (var entry :
+            ExactCalculator.netDistribution(config, state, decision.claimSize()).entrySet()) {
+          outcomes.merge(entry.getKey(), probability * entry.getValue(), Double::sum);
         }
-
-        Action action = policy.actionAt(t, g);
-
-        if (action == Action.CLAIM) {
-            int k = policy.kAt(t, g);
-            int penalty = allGoodsRevealed ? OptimalPolicy.REVEAL_PENALTY : 0;
-
-            if (k <= 0) {
-                Map<Integer, Double> terminal = Map.of(-penalty, 1.0);
-                memo.put(key, terminal);
-                return terminal;
-            }
-
-            int N = OptimalPolicy.N0 - t; // unrevealed LEDs
-            int K = OptimalPolicy.K0 - g; // good LEDs remaining
-
-            Map<Integer, Double> base = ExactCalculator.netDistribution(N, K, k);
-            Map<Integer, Double> shifted = new HashMap<>();
-
-            for (var e : base.entrySet()) {
-                int net = e.getKey() - penalty;
-                shifted.merge(net, e.getValue(), Double::sum);
-            }
-
-            memo.put(key, shifted);
-            return shifted;
+      } else {
+        int remaining = config.totalTiles() - state.revealed();
+        int goodRemaining = config.goodTiles() - state.goodRevealed();
+        if (goodRemaining > 0) {
+          mass[state.revealed() + 1][state.goodRevealed() + 1] +=
+              probability * goodRemaining / remaining;
         }
-
-        // action == REVEAL
-        int N = OptimalPolicy.N0 - t; // unrevealed LEDs remaining
-        int K = OptimalPolicy.K0 - g; // good LEDs remaining
-
-        double pGood = (double) K / N;
-        double pBad = 1.0 - pGood;
-
-        Map<Integer, Double> goodDist = distFromState(t + 1, g + 1, policy, memo);
-        Map<Integer, Double> badDist = distFromState(t + 1, g, policy, memo);
-
-        Map<Integer, Double> combined = new HashMap<>();
-        accumulateWeighted(combined, goodDist, pGood);
-        accumulateWeighted(combined, badDist, pBad);
-
-        memo.put(key, combined);
-        return combined;
-    }
-
-    private static void accumulateWeighted(Map<Integer, Double> into,
-                                           Map<Integer, Double> source,
-                                           double weight) {
-        if (weight == 0.0) return;
-        for (var e : source.entrySet()) {
-            into.merge(e.getKey(), e.getValue() * weight, Double::sum);
+        if (remaining > goodRemaining) {
+          mass[state.revealed() + 1][state.goodRevealed()] +=
+              probability * (remaining - goodRemaining) / remaining;
         }
+      }
     }
+    return Collections.unmodifiableMap(outcomes);
+  }
 }
-

@@ -1,96 +1,55 @@
 package ledprobabilitymodel;
 
-import java.util.Map;
-import java.util.TreeMap;
-
-import ledprobabilitymodel.simulation.ExactCalculator;
-import ledprobabilitymodel.simulation.MonteCarlo;
-import ledprobabilitymodel.simulation.OptimalPlayerSimulator;
-import ledprobabilitymodel.simulation.OptimalPolicy;
-import ledprobabilitymodel.simulation.OutcomeDistribution;
+import java.awt.GraphicsEnvironment;
+import java.io.IOException;
+import java.io.PrintStream;
+import ledprobabilitymodel.cli.Options;
+import ledprobabilitymodel.reporting.ReportWriter;
+import ledprobabilitymodel.reporting.Study;
 import ledprobabilitymodel.simulation.Plotter;
 
-public class Main {
+/** Command-line entry point; normal analyses run without a graphical desktop. */
+public final class Main {
+  private Main() {}
 
-    public static void main(String[] args) {
+  public static void main(String[] args) {
+    int status = run(args, System.out, System.err);
+    if (status != 0) System.exit(status);
+  }
 
-        int N = 30;
-        int K = 3;
-        int trials = 1_000_000;
-
-        var dist = ExactCalculator.netDistribution(N, K, 4); // Edit k here for different distributions 
-        Map<Integer, Double> exactEV = ExactCalculator.expectedNetByK(N, K);
-        Map<Integer, Double> mcEV = MonteCarlo.expectedNetByKMC(trials, N, K);
-        Map<Integer, Integer> mcNet = MonteCarlo.simulatedNetTotalByKMC(trials, N, K);
-        Map<Integer, Integer> mcNumNet1 = MonteCarlo.numNetOccured(N, K, 1, trials);
-        Map<Integer, Integer> mcNumNet2 = MonteCarlo.numNetOccured(N, K, 2, trials);
-        Map<Integer, Integer> mcNumNet3 = MonteCarlo.numNetOccured(N, K, 3, trials);
-        Map<Integer, Integer> mcNumNet4 = MonteCarlo.numNetOccured(N, K, 4, trials);
-        Map<Integer, Integer> mcNumNet5 = MonteCarlo.numNetOccured(N, K, 5, trials);
-
-        // System.out.println("k\tExactEV\t\tMonteCarloEV");
-        // System.out.println("----------------------------------------");
-
-        // int bestK = 1;
-        // double bestExact = Double.NEGATIVE_INFINITY;
-
-        // for (int k : exactEV.keySet()) {
-        //     double e = exactEV.get(k);
-        //     double m = mcEV.get(k);
-
-        //     System.out.printf("%d\t% .6f\t% .6f%n", k, e, m);
-
-        //     if (e > bestExact) {
-        //         bestExact = e;
-        //         bestK = k;
-        //     }
-        // }
-
-        // for (int k : mcNet.keySet()) {
-        //     int net = mcNet.get(k);
-        //     System.out.printf("Simulated Total Net for k=%d: %d%n", k, net);
-        // }
-
-        // Optimal simulation data
-        OptimalPolicy policy = new OptimalPolicy();
-        OptimalPlayerSimulator optimalSim = new OptimalPlayerSimulator(policy);
-        var optimalResult = optimalSim.simulate(trials);
-
-        System.out.printf("%nOptimal policy average net over %,d trials: %.6f%n",
-                trials, optimalResult.overallAverageNet());
-        System.out.println("Average net by claimed k when following optimal policy:");
-        var sorted = new TreeMap<>(optimalResult.averageNetByK());
-        for (var e : sorted.entrySet()) {
-            System.out.printf("k=%d -> avg net = %.6f%n", e.getKey(), e.getValue());
-        }
-        var optimalNetCounts = new TreeMap<>(optimalSim.netOccurrences(trials));
-        System.out.println("\nNet payout occurrence counts under optimal policy:");
-        for (var e : optimalNetCounts.entrySet()) {
-            System.out.printf("net=%d -> count=%d%n", e.getKey(), e.getValue());
-        }
-
-        // Visualize expected/average net by k
-        Plotter.plotExpectedNetByK("Optimal policy average net by k", "Optimal policy", sorted);
-        // Plotter.plotExpectedNetByK("Exact expected net by k (non-optimal)", "Exact EV", exactEV);
-        // Plotter.plotExpectedNetByK("Monte Carlo expected net by k", "MC EV", mcEV);
-
-        // System.out.println("\nBest k under k ≤ 5 constraint:");
-        // System.out.printf("k = %d, ExactEV = %.6f%n", bestK, bestExact);
-        // Plotter.plotDistribution ("Probability of Payouts for 4 Claimed", dist);
-        // Plotter.netNumDistribution ("Number of Occurrences of Payouts for k=5 (N=30, K=3, k=5)", mcNumNet5);
-        
-        Map<Integer, Double> netProb = OutcomeDistribution.optimalNetDistribution(policy);
-
-        System.out.println("\nFull outcome distribution under optimal policy (net -> probability):");
-        var sortedOutcomes = new TreeMap<>(netProb);
-        for (var e : sortedOutcomes.entrySet()) {
-            System.out.printf("net=%d -> %.10f%n", e.getKey(), e.getValue());
-        }
-
-        Plotter.plotDistribution("Optimal Policy Net Payout Distribution (N=30, K=3)", netProb);
-
+  /** Returns 0 on success, 2 for invalid arguments, and 1 for output failures. */
+  public static int run(String[] args, PrintStream output, PrintStream error) {
+    try {
+      var options = Options.parse(args);
+      if (options.help()) {
+        output.print(Options.usage());
+        return 0;
+      }
+      if (options.charts() && GraphicsEnvironment.isHeadless()) {
+        throw new IllegalArgumentException(
+            "--charts requires a graphical desktop; omit it for headless analysis");
+      }
+      var study = Study.run(options.config(), options.trials(), options.seed());
+      if (options.output() != null) ReportWriter.write(study, options.output());
+      output.print(ReportWriter.console(study));
+      if (options.output() != null) output.println("Reports: " + options.output().toAbsolutePath());
+      if (options.charts()) {
+        var adaptive = study.results().get(study.results().size() - 1);
+        Plotter.plotDistribution("Adaptive net-payout distribution", adaptive.exact());
+        var expected = new java.util.TreeMap<Integer, Double>();
+        study.results().stream()
+            .filter(r -> r.claimSize() > 0)
+            .forEach(r -> expected.put(r.claimSize(), r.exactMean()));
+        Plotter.plotExpectedNetByK("Immediate fixed claims", "Exact expected net", expected);
+      }
+      return 0;
+    } catch (IllegalArgumentException exception) {
+      error.println("Error: " + exception.getMessage());
+      error.println("Use --help for usage.");
+      return 2;
+    } catch (IOException exception) {
+      error.println("Could not write reports: " + exception.getMessage());
+      return 1;
     }
+  }
 }
-
-
-// mvn -q exec:java -Dexec.mainClass=ledprobabilitymodel.Main to run the code `

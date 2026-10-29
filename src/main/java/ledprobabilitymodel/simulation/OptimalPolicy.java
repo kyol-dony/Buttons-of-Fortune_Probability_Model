@@ -1,117 +1,122 @@
 package ledprobabilitymodel.simulation;
 
+import java.util.ArrayList;
+import java.util.List;
 import ledprobabilitymodel.game.Action;
+import ledprobabilitymodel.game.Decision;
+import ledprobabilitymodel.game.GameConfig;
+import ledprobabilitymodel.game.GameState;
 
-/*
- * The OptimalPolicy class computes the best possible strategy for the player
- * by solving the game as a Markov Decision Process
- * and storing the optimal action and claim size at every possible game state. 
- */
-public class OptimalPolicy {
+/** Backward induction maximizes expected net over reachable reveal-or-claim states. */
+public final class OptimalPolicy {
+  public static final int N0 = GameConfig.defaults().totalTiles();
+  public static final int K0 = GameConfig.defaults().goodTiles();
+  public static final int K_MAX = GameConfig.defaults().maxClaim();
+  public static final int REVEAL_PENALTY = GameConfig.defaults().revealPenalty();
 
-    // Problem parameters
-    public static final int N0 = 30;
-    public static final int K0 = 3;
-    public static final int REVEAL_PENALTY = 3; // flat penalty only if all good LEDs were revealed
-    
-    // Maximum allowable k value
-    public static final int K_MAX = 5;
+  private final GameConfig config;
+  private final double[][] values;
+  private final Decision[][] decisions;
+  private final List<GameState> states;
 
-    // Value table for expected net payouts
-    private final double[][] V = new double[N0 + 1][K0 + 1];
+  public OptimalPolicy() {
+    this(GameConfig.defaults());
+  }
 
-    // Policy tables for actions and best k values
-    private final Action[][] bestAction = new Action[N0 + 1][K0 + 1];
-    private final int[][] bestK = new int[N0 + 1][K0 + 1];
-
-    public OptimalPolicy() {
-        compute();
-}
-    // Dynamic programming computation of optimal policy
-    private void compute() {
-        // Fill from t = N0 down to 0 because REVEAL moves you to t+1
-        for (int t = N0; t >= 0; t--) {
-            for (int g = K0; g >= 0; g--) {
-
-                // Terminal states:
-                // - all good found or no LEDs left => cannot claim.
-                //   Net is the flat penalty only when all goods have been revealed.
-                boolean allGoodsRevealed = (g == K0);
-                if (allGoodsRevealed || t == N0) {
-                    V[t][g] = allGoodsRevealed ? -REVEAL_PENALTY : 0.0;
-                    bestAction[t][g] = Action.CLAIM;
-                    bestK[t][g] = 0;
-                    continue;
-                }
-
-                int N = N0 - t; // unrevealed LEDs remaining
-                int K = K0 - g; // good LEDs remaining
-
-                // ---- Option 1: CLAIM now ----
-                int upperK = Math.min(K_MAX, N);
-
-                double bestClaimEV = Double.NEGATIVE_INFINITY;
-                int argBestK = 1;
-
-                for (int k = 1; k <= upperK; k++) {
-                    // Exact expected net if we claim k from (N,K), minus flat penalty if all goods were revealed
-                    double ev = ExactCalculator.expectedNet(N, K, k) - (allGoodsRevealed ? REVEAL_PENALTY : 0.0);
-                    if (ev > bestClaimEV) {
-                        bestClaimEV = ev;
-                        argBestK = k;
-                    }
-                }
-
-                // ---- Option 2: REVEAL one more LED ----
-                // Next revealed is good with probability K/N
-                double pGood = (double) K / N;
-                double pBad = 1.0 - pGood;
-
-                // Expected value if we reveal, then follow the optimal policy
-                double revealEV =
-                        pGood * V[t + 1][g + 1] +
-                        pBad  * V[t + 1][g];
-
-                // ---- Choose best option ----
-                if (revealEV > bestClaimEV) {
-                    V[t][g] = revealEV;
-                    bestAction[t][g] = Action.REVEAL;
-                    bestK[t][g] = -1;
-                } else {
-                    V[t][g] = bestClaimEV;
-                    bestAction[t][g] = Action.CLAIM;
-                    bestK[t][g] = argBestK;
-                }
-            }
-        }
+  public OptimalPolicy(GameConfig config) {
+    this.config = java.util.Objects.requireNonNull(config, "config");
+    values = new double[config.totalTiles() + 1][config.goodTiles() + 1];
+    decisions = new Decision[values.length][config.goodTiles() + 1];
+    var reachable = new ArrayList<GameState>();
+    for (int revealed = config.totalTiles(); revealed >= 0; revealed--) {
+      int minGood = Math.max(0, revealed - (config.totalTiles() - config.goodTiles()));
+      int maxGood = Math.min(revealed, config.goodTiles());
+      for (int good = minGood; good <= maxGood; good++) {
+        var state = new GameState(revealed, good);
+        reachable.add(state);
+        solve(state);
+      }
     }
-    // Accessors
-    public double valueAt (int t, int g) {
-        return V[t][g];
-    }
-    // Get the best action at state (t,g)
-    public Action actionAt (int t, int g) {
-        return bestAction[t][g];
-    }
-    // Get the best k to claim at state (t,g) if action is CLAIM
-    public int kAt (int t, int g) {
-        return bestK[t][g];
-    }
+    reachable.sort(
+        java.util.Comparator.comparingInt(GameState::revealed)
+            .thenComparingInt(GameState::goodRevealed));
+    states = List.copyOf(reachable);
+  }
 
-    // Print the optimal policy table
-    public void printPolicy() {
-        System.out.println("Optimal Policy Table (t,g): Action (k if CLAIM)");
-        for (int t = 0; t <= N0; t++) {
-            for (int g = 0; g <= K0; g++) {
-                Action action = bestAction[t][g];
-                if (action == Action.CLAIM) {
-                    int k = bestK[t][g];
-                    System.out.printf("(%2d,%2d): CLAIM (%d)  ", t, g, k);
-                } else {
-                    System.out.printf("(%2d,%2d): REVEAL     ", t, g);
-                }
-            }
-            System.out.println();
-        }
+  private void solve(GameState state) {
+    int revealed = state.revealed(), good = state.goodRevealed();
+    if (config.terminal(state)) {
+      values[revealed][good] = config.terminalNet(state);
+      decisions[revealed][good] = new Decision(Action.CLAIM, 0);
+      return;
     }
+    int remaining = config.totalTiles() - revealed;
+    int goodRemaining = config.goodTiles() - good;
+    double best = Double.NEGATIVE_INFINITY;
+    int bestClaim = 1;
+    for (int size = 1; size <= Math.min(config.maxClaim(), remaining); size++) {
+      double value = ExactCalculator.expectedNet(config, state, size);
+      if (value > best) {
+        best = value;
+        bestClaim = size;
+      }
+    }
+    double reveal = 0;
+    if (goodRemaining > 0) {
+      reveal += ((double) goodRemaining / remaining) * values[revealed + 1][good + 1];
+    }
+    if (remaining > goodRemaining) {
+      reveal += ((double) (remaining - goodRemaining) / remaining) * values[revealed + 1][good];
+    }
+    // Strict comparison preserves smaller claims and chooses CLAIM on exact ties.
+    decisions[revealed][good] =
+        reveal > best ? new Decision(Action.REVEAL, 0) : new Decision(Action.CLAIM, bestClaim);
+    values[revealed][good] = Math.max(best, reveal);
+  }
+
+  public GameConfig config() {
+    return config;
+  }
+
+  public List<GameState> reachableStates() {
+    return states;
+  }
+
+  public Decision decisionAt(GameState state) {
+    config.validateState(state);
+    return decisions[state.revealed()][state.goodRevealed()];
+  }
+
+  public double valueAt(GameState state) {
+    config.validateState(state);
+    return values[state.revealed()][state.goodRevealed()];
+  }
+
+  public double valueAt(int revealed, int goodRevealed) {
+    return valueAt(new GameState(revealed, goodRevealed));
+  }
+
+  public Action actionAt(int revealed, int goodRevealed) {
+    return decisionAt(new GameState(revealed, goodRevealed)).action();
+  }
+
+  public int kAt(int revealed, int goodRevealed) {
+    var decision = decisionAt(new GameState(revealed, goodRevealed));
+    return decision.action() == Action.REVEAL ? -1 : decision.claimSize();
+  }
+
+  public void printPolicy() {
+    System.out.println("revealed,good_revealed,action,claim_size,expected_net");
+    for (var state : states) {
+      var decision = decisionAt(state);
+      System.out.printf(
+          java.util.Locale.ROOT,
+          "%d,%d,%s,%d,%.12f%n",
+          state.revealed(),
+          state.goodRevealed(),
+          config.terminal(state) ? "END" : decision.action(),
+          decision.claimSize(),
+          valueAt(state));
+    }
+  }
 }
