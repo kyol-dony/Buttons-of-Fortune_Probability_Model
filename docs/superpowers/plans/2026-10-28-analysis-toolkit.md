@@ -59,6 +59,17 @@
 - [x] Document methods, interpretation, uncertainty, bounded inputs, defaults, examples, compatibility and licensing status.
 - [x] Generate examples with documented command; add CI Maven verification and whitespace verification.
 - [x] Run Maven verify, CLI subprocess errors, alternate configs and clean-tree checks.
-- [ ] Commit; dispatch final independent review; fix material findings with regression proof.
-- [ ] Publish changes to existing feature branch using native GitHub APIs with expected-head guard and open draft PR.
+- [x] Commit; dispatch final independent review; fix material findings with regression proof.
+- [x] Publish changes to existing feature branch using native GitHub APIs with expected-head guard and open draft PR.
 
+
+## Completion evidence
+
+- 24 Maven tests passed locally and in CI on Java 17 and Java 25.
+- Formatting check passed locally and in CI.
+- Independent whole-branch review found no actionable issues.
+- Headless subprocess exit codes, report consistency, maximum accepted model, and clean-checkout runs passed.
+- Original Git history preserved and tracked target output removed.
+- Firmware SHA is unchanged: 4c909c177183afca9bbb316e045e9af286e0ead3.
+- Draft PR: https://github.com/kyol-dony/ledprobdistribution/pull/1
+- Hardware execution/upload and actual Swing windows were not exercised.
