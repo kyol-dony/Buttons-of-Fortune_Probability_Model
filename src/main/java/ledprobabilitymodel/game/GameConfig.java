@@ -34,7 +34,7 @@ public record GameConfig(
   }
 
   public static GameConfig defaults() {
-    return new GameConfig(30, 3, 5, 1, List.of(0, 5, 10, 30));
+    return new GameConfig(30, 3, 5, 3, List.of(0, 5, 10, 30));
   }
 
   /** A reachable state cannot contain more revealed good or bad tiles than exist. */

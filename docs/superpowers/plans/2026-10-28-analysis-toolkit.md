@@ -9,7 +9,7 @@
 
 ## Global Constraints
 - Java 17 compatibility, Maven, existing XChart dependency; no new runtime dependency.
-- Default board 30, good 3, claim cap 5, payouts [0,5,10,30], terminal penalty 1.
+- Default board 30, good 3, claim cap 5, payouts [0,5,10,30], terminal penalty 3, updated from master commit 616f7c7.
 - Default 100,000 trials, seed 2026. CLI headless unless charts explicitly requested.
 - Preserve free reveals, sampling without replacement, and original terminal rules.
 - Strict comparisons select smaller claim sizes and claim on exact reveal ties.
@@ -73,3 +73,6 @@
 - Firmware SHA is unchanged: 4c909c177183afca9bbb316e045e9af286e0ead3.
 - Draft PR: https://github.com/kyol-dony/ledprobdistribution/pull/1
 - Hardware execution/upload and actual Swing windows were not exercised.
+
+## Later master integration
+Reopened PR #1 and integrated master commit 616f7c7. Preserved the 3-token reveal penalty and editor recommendations, regenerated sample results, and added regression checks separating the current default from the historical one-token case.

@@ -9,8 +9,19 @@ import org.junit.jupiter.api.Test;
 
 class AnalysisTest {
   @Test
-  void defaultGameMatchesOriginalFindings() {
-    var c = GameConfig.defaults();
+  void defaultThreeTokenPenaltyMatchesUpdatedMasterFindings() {
+    var policy = new OptimalPolicy();
+    var distribution = OutcomeDistribution.optimalNetDistribution(policy);
+    assertEquals(-0.19113300492610846, policy.valueAt(GameState.initial()), 1e-12);
+    assertEquals(policy.valueAt(GameState.initial()), mean(distribution), 1e-12);
+    assertEquals(0.1556650246305418, FavorAnalysis.profitProbability(distribution), 1e-12);
+    assertTrue(distribution.containsKey(-3));
+    assertDistribution(distribution);
+  }
+
+  @Test
+  void originalOneTokenPenaltyFindingsRemainReproducible() {
+    var c = new GameConfig(30, 3, 5, 1, List.of(0, 5, 10, 30));
     double[] expected = {-0.5, -1, -1.4963054187192115, -1.9852216748768474, -2.4630541871921183};
     for (int size = 1; size <= 5; size++) {
       assertEquals(

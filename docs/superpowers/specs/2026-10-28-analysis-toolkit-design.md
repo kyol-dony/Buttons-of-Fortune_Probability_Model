@@ -21,7 +21,7 @@ The report includes settings, seed, trials, exact expected net, simulated expect
 - Keep Java 17 compatibility, Maven, and the existing XChart dependency. Add a test dependency only for the verification suite.
 - Retain repository identity and history. Work on a separate branch. Keep the original study recognizable, with Buttons of Fortune as the case study and an analysis-toolkit subtitle.
 - Keep the original rules: uniformly randomized board, sampling without replacement, revealed tiles unavailable for claiming, free reveals, terminal loss when all good tiles are revealed, and a terminal claim whose cost is the number of claimed tiles.
-- Defaults: 30 playable tiles, 3 good tiles, claim cap 5, payout table [0, 5, 10, 30] by good tiles claimed, exhausted-good penalty 1.
+- Defaults: 30 playable tiles, 3 good tiles, claim cap 5, payout table [0, 5, 10, 30] by good tiles claimed, exhausted-good penalty 3, reflecting the later master update 616f7c7.
 - Configurable board size, good-tile count, claim cap, terminal penalty, trial count, seed, and integer payout table. Changing good-tile count requires a matching table through that count. Reject invalid or impractically large settings with a clear message rather than silently truncating them.
 - Default trials 100,000 and seed 2026. Document how to request one million trials. Preserve the original defaults as a named case study, while making its simulation reproducible.
 - The implementation chooses conservative, documented computational limits based on the state-table memory and numeric range. It must reject unsupported inputs before allocating tables, and test those limits. This is a bounded finite-game study, not an unrestricted combinatorial engine.
@@ -48,7 +48,7 @@ Keep comparisons distinct:
 - Inject the random source, use a documented seed, and record it in outputs.
 - Do not silently preserve defective edge behavior. Keep the default game's verified results stable.
 
-## Baseline checks already run
+## Historical baseline checks already run (one-token penalty)
 Compiled the existing core classes with the available JDK, without chart dependencies.
 - Fixed-claim expected nets for claim sizes 1..5:
   -0.5, -1.0, -1.4963054187192115, -1.9852216748768474, -2.4630541871921183.
@@ -90,3 +90,6 @@ A reviewed implementation branch and draft pull request with a concise before/af
 ## Implementation choices left to the builder
 Exact package names, CLI flag spellings, report filenames, test framework version, numeric implementation details, conservative resource limits, and formatting configuration, provided they satisfy this scope and avoid unnecessary dependencies.
 
+
+## Later master integration
+Master commit 616f7c7 changes the reveal penalty from 1 to 3. The toolkit carries this rule into GameConfig.defaults(), regenerates the default study, and retains the one-token findings as an explicit historical regression case. The editor recommendation change from the same commit is preserved.

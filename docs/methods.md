@@ -74,14 +74,16 @@ Changing from the old shuffled-board implementation to urn sampling changes the 
 
 ## Interpretation
 
-For the original game:
+For the current game, with the three-token reveal penalty from master:
 - The best fixed claim is one tile, with mean -0.5.
-- The adaptive mean is about +0.098522167488.
-- Adaptive net outcomes are -1, 2, 5, and 25.
-- P(loss) = 5/7, about 71.4286%.
-- P(profit) = 2/7, about 28.5714%.
+- The adaptive mean is about -0.191133004926.
+- Adaptive net outcomes are -3, -1, 1, 4, 5, and 25.
+- P(loss) is about 84.4335%.
+- P(profit) is about 15.5665%.
 
-A mean-maximizing policy need not maximize the chance of profit. The fixed four-tile strategy has a higher chance of profit than the adaptive policy, yet has negative expected net. The five-tile strategy can break even, so P(profit) + P(loss) need not equal one.
+The adaptive policy improves expected net over fixed claims, but the expected net remains negative. It does not maximize the chance of profit. The fixed four-tile strategy has a higher chance of profit than the adaptive policy, yet a worse expected net. The five-tile strategy can break even, so P(profit) + P(loss) need not equal one.
+
+The earlier one-token-penalty case remains available with --penalty 1. Its adaptive mean is about +0.098522167488, with P(loss) = 5/7 and P(profit) = 2/7. Regression tests keep this historical case separate from the current default. A positive mean need not imply a high chance of profit.
 
 Averages grouped by the claim size chosen by an adaptive policy condition on the state which led to that choice. They must not be ranked as if they were immediate fixed-size strategies. Main reports compare complete strategies from the same initial board.
 

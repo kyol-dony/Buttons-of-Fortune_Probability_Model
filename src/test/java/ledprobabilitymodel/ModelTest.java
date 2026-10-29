@@ -12,6 +12,13 @@ import org.junit.jupiter.api.Test;
 
 class ModelTest {
   @Test
+  void defaultRevealPenaltyFollowsLatestMasterRules() {
+    assertEquals(3, GameConfig.defaults().revealPenalty());
+    assertEquals(3, ledprobabilitymodel.simulation.OptimalPolicy.REVEAL_PENALTY);
+    assertEquals(-3, GameConfig.defaults().terminalNet(new GameState(3, 3)));
+  }
+
+  @Test
   void defaultPayoutsAndCostsMatchOriginalGame() {
     var c = GameConfig.defaults();
     assertEquals(-5, c.net(0, 5));

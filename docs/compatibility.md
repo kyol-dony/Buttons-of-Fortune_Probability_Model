@@ -20,6 +20,8 @@ New primary APIs are GameConfig, GameState, Simulator, SimulationStats, Study, a
 
 ## Intentional changes
 
+The default reveal penalty is 3 tokens, preserving the later master change in commit 616f7c7. The historical 1-token study is available through --penalty 1.
+
 - Impossible configurations and states fail explicitly.
 - Simulations require 2..1,000,000 trials.
 - A zero-good board begins terminal, with net equal to the negative reveal penalty.

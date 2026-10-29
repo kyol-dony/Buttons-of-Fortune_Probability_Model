@@ -83,7 +83,7 @@ public record Options(
       --tiles N        Playable tiles, 1..200 (default 30)
       --good N         Good tiles, 0..min(tiles,20) (default 3)
       --max-claim N    Claim cap, 1..min(tiles,50) (default 5)
-      --penalty N      Loss after revealing all good tiles (default 1)
+      --penalty N      Loss after revealing all good tiles (default 3)
       --payouts LIST   Gross payouts for 0..good claimed (default 0,5,10,30)
       --trials N       Trials per strategy, 2..1000000 (default 100000)
       --seed N         Signed 64-bit random seed (default 2026)

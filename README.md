@@ -7,9 +7,11 @@ The project began as a tool for summarizing findings for a school project. This 
 
 ## What the study finds
 
-Under the original rules, the best immediate fixed claim has an expected net of **-0.50 tokens**. The expected-net-maximizing adaptive policy has an expected net of approximately **+0.098522 tokens**, while losing one token in **71.43%** of games.
+Under the current rules, the best immediate fixed claim has an expected net of **-0.50 tokens**. With the three-token reveal penalty from master, the expected-net-maximizing adaptive policy averages approximately **-0.191133 tokens**, with a **15.57%** chance of profit.
 
-A positive mean and a high probability of profit are different properties. The adaptive policy's occasional larger payouts offset frequent losses. These conclusions depend on free reveals and the game's exact payout and termination rules.
+The adaptive policy improves expected net over immediate fixed claims, but both remain negative under these rules. Expected net and probability of profit are different properties. These conclusions depend on free reveals and the exact payout and termination rules.
+
+The earlier one-token penalty case remains reproducible with --penalty 1. It averages about +0.098522 tokens and illustrates why a positive mean need not imply a high chance of profit.
 
 ## Quick start
 
@@ -29,7 +31,7 @@ fixed-2       -1.000000    -0.998750   0.006593        0.193103       0.806897
 fixed-3       -1.496305    -1.501150   0.008028        0.279557       0.720443
 fixed-4       -1.985222    -1.980800   0.009411        0.359606       0.640394
 fixed-5       -2.463054    -2.466550   0.010518        0.064039       0.566502
-adaptive       0.098522     0.092020   0.006767        0.285714       0.714286
+adaptive      -0.191133    -0.186370   0.007180        0.155665       0.844335
 ```
 
 The five-tile claim has a substantial probability of breaking even, so its profit and loss probabilities sum to less than one. MC SE is Monte Carlo standard error of the estimated mean, not the spread of one game's outcome.
@@ -39,7 +41,7 @@ The five-tile claim has a substantial probability of breaking even, so its profi
 - The original board has 32 buttons. Two are controls, leaving 30 playable tiles.
 - Exactly three playable tiles are good, uniformly placed without replacement.
 - A player may reveal a tile for free. A revealed tile is unavailable for a later claim.
-- Revealing all good tiles ends the game with a loss of one token.
+- Revealing all good tiles ends the game with a loss of three tokens.
 - Alternatively, the player claims one to five hidden tiles and ends the game.
 - A claim costs one token per claimed tile.
 - Gross payouts for zero, one, two, or three good tiles claimed are 0, 5, 10, and 30 tokens.
@@ -80,7 +82,7 @@ mvn -q exec:java -Dexec.args='--output "reports/my study"'
 | `--tiles` | 30 | 1..200 |
 | `--good` | 3 | 0..min(tiles, 20) |
 | `--max-claim` | 5 | 1..min(tiles, 50) |
-| `--penalty` | 1 | 0..1,000,000 |
+| `--penalty` | 3 | 0..1,000,000 |
 | `--payouts` | 0,5,10,30 | Exactly good+1 nonnegative integers, each at most 1,000,000 |
 | `--trials` | 100000 | 2..1,000,000 per strategy |
 | `--seed` | 2026 | Signed 64-bit integer |

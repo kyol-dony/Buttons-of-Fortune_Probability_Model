@@ -7,7 +7,7 @@ Question: how do immediate fixed claims compare with an expected-net-maximizing 
 - Playable tiles: 30
 - Good tiles: 3
 - Maximum claim: 5
-- Terminal reveal penalty: 1
+- Terminal reveal penalty: 3
 - Gross payouts by good tiles claimed: [0, 5, 10, 30]
 - Trials per strategy: 100000
 - Seed: 2026
@@ -21,7 +21,7 @@ Question: how do immediate fixed claims compare with an expected-net-maximizing 
 | fixed-3 | -1.496305419 | -1.501150000 | 0.008027928 | 0.279556650 | 0.720443350 |
 | fixed-4 | -1.985221675 | -1.980800000 | 0.009411387 | 0.359605911 | 0.640394089 |
 | fixed-5 | -2.463054187 | -2.466550000 | 0.010518076 | 0.064039409 | 0.566502463 |
-| adaptive | 0.098522167 | 0.092020000 | 0.006767258 | 0.285714286 | 0.714285714 |
+| adaptive | -0.191133005 | -0.186370000 | 0.007180270 | 0.155665025 | 0.844334975 |
 
 ## Methods and interpretation
 
