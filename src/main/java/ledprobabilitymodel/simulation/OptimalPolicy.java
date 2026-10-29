@@ -12,7 +12,7 @@ public class OptimalPolicy {
     // Problem parameters
     public static final int N0 = 30;
     public static final int K0 = 3;
-    public static final int REVEAL_PENALTY = 1; // flat penalty only if all good LEDs were revealed
+    public static final int REVEAL_PENALTY = 3; // flat penalty only if all good LEDs were revealed
     
     // Maximum allowable k value
     public static final int K_MAX = 5;
